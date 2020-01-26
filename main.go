@@ -31,7 +31,7 @@ func getGithubUserInfo() {
 		Page:    0,
 		PerPage: 0,
 	})
-	if nil != err {
+	if err == nil {
 		for i := range res {
 			fmt.Println("repoName: " + res[i].Repo.GetName() + "Create: " + res[i].CreatedAt.Local().String())
 		}
