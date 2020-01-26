@@ -27,14 +27,16 @@ func getGithubUserInfo() {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: accessToken})
 	client := github.NewClient(oauth2.NewClient(ctx, ts))
-	var res []*github.Event
-	res, _, _ = client.Activity.ListEventsPerformedByUser(ctx, "lmimsra", false, &github.ListOptions{
+	res, _, err := client.Activity.ListEventsPerformedByUser(ctx, "lmimsra", false, &github.ListOptions{
 		Page:    0,
 		PerPage: 0,
 	})
-
-	for i := range res {
-		fmt.Println("repoName: " + res[i].Repo.GetName() + "Create: " + res[i].CreatedAt.Local().String())
+	if nil != err {
+		for i := range res {
+			fmt.Println("repoName: " + res[i].Repo.GetName() + "Create: " + res[i].CreatedAt.Local().String())
+		}
+	} else {
+		fmt.Println(err)
 	}
 
 	//fmt.Println(res[1])
