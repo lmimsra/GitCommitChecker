@@ -7,6 +7,7 @@ import (
 	"github.com/joho/godotenv"
 	"golang.org/x/oauth2"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -24,7 +25,7 @@ func main() {
 	// envの読み込み
 	err := godotenv.Load("./.env")
 	if err != nil {
-		fmt.Println("env load error")
+		fmt.Println("[ERROR] env load error")
 		os.Exit(1)
 	}
 
@@ -33,11 +34,13 @@ func main() {
 	getGithubUserInfo()
 }
 
+// 当日のアクティビティを取得する（privateのコミット、アクティビティも含む）
 func getGithubUserInfo() {
 	var accessToken string = os.Getenv("GITHUB_PERSONAL_ACCESS_KEY")
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: accessToken})
 	client := github.NewClient(oauth2.NewClient(ctx, ts))
+	// privateなアクティビティも取得するので、keyにはprivateなコミットにもアクセスできるだけの権限を与えておくこと
 	res, _, err := client.Activity.ListEventsPerformedByUser(ctx, "lmimsra", false, &github.ListOptions{
 		Page:    0,
 		PerPage: 0,
@@ -56,11 +59,13 @@ func getGithubUserInfo() {
 		}
 	} else {
 		fmt.Println(err)
+		fmt.Println("[ERROR] commit get failed from github.....")
+		os.Exit(1)
 	}
 
+	fmt.Println("today Activity length is " + strconv.Itoa(len(todayActivity)))
+	fmt.Println("today Activity")
 	for i := range todayActivity {
-		fmt.Println("today Activity")
 		fmt.Println("repoName: " + todayActivity[i].Repo.GetName() + "Create: " + res[i].CreatedAt.Local().String())
 	}
-	//fmt.Println(res[1])
 }
