@@ -45,6 +45,14 @@ func getGithubUserInfo() {
 		Page:    0,
 		PerPage: 0,
 	})
+
+	resCommits, _, _ := client.Repositories.ListCommits(ctx, "lmimsra", "privante", &github.CommitsListOptions{
+		Author: "lmimsra",
+		ListOptions: github.ListOptions{
+			Page:    0,
+			PerPage: 0,
+		},
+	})
 	now := time.Now()
 	unixTime := now.Unix()
 	_, offset := now.Zone()
@@ -53,6 +61,8 @@ func getGithubUserInfo() {
 	var todayActivity []*github.Event
 	if err == nil {
 		for i := range res {
+			fmt.Println("repoName: " + res[i].Repo.GetName() + "Create: " + res[i].CreatedAt.Local().String())
+
 			if res[i].CreatedAt.Local().After(today) {
 				todayActivity = append(todayActivity, res[i])
 			}
@@ -62,10 +72,14 @@ func getGithubUserInfo() {
 		fmt.Println("[ERROR] commit get failed from github.....")
 		os.Exit(1)
 	}
-
 	fmt.Println("today Activity length is " + strconv.Itoa(len(todayActivity)))
 	fmt.Println("today Activity")
 	for i := range todayActivity {
 		fmt.Println("repoName: " + todayActivity[i].Repo.GetName() + "Create: " + res[i].CreatedAt.Local().String())
+	}
+
+	println("commits")
+	for i := range resCommits {
+		fmt.Println("name is " + resCommits[i].Author.GetName() + " message is " + resCommits[i].Commit.GetMessage())
 	}
 }
