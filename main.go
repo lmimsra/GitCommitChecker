@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/ChimeraCoder/anaconda"
 	"github.com/google/go-github/github"
 	"github.com/joho/godotenv"
 	"golang.org/x/oauth2"
+	"net/url"
 	"os"
 	"strconv"
 	"time"
@@ -31,11 +33,12 @@ func main() {
 
 	fmt.Println("process start")
 	fmt.Println("run environment is " + os.Getenv("ENV"))
-	getGithubUserInfo()
+	numOfActivity := getGithubUserInfo()
+	tweetCommit(numOfActivity)
 }
 
 // 当日のアクティビティを取得する（privateのコミット、アクティビティも含む）
-func getGithubUserInfo() {
+func getGithubUserInfo() int {
 	var accessToken string = os.Getenv("GITHUB_PERSONAL_ACCESS_KEY")
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: accessToken})
@@ -82,4 +85,19 @@ func getGithubUserInfo() {
 	for i := range resCommits {
 		fmt.Println("name is " + resCommits[i].Author.GetName() + " message is " + resCommits[i].Commit.GetMessage())
 	}
+
+	return len(todayActivity)
+}
+
+// アクティビティ数をTwitterに投稿
+func tweetCommit(numOfActivity int) {
+	apiKey := os.Getenv("TWITTER_API_KEY")
+	apiSecret := os.Getenv("TWITTER_API_SECRET")
+	accessToken := os.Getenv("TWITTER_ACCESS_TOKEN")
+	accessTokenSecret := os.Getenv("TWITTER_ACCESS_TOKEN_SECRET")
+	api := anaconda.NewTwitterApiWithCredentials(accessToken, accessTokenSecret, apiKey, apiSecret)
+
+	tweet, _ := api.PostTweet("tweet by Go!", url.Values{})
+
+	fmt.Println("tweet success! " + tweet.IdStr)
 }
