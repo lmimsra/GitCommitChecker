@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/ChimeraCoder/anaconda"
+	"github.com/ashwanthkumar/slack-go-webhook"
 	"github.com/google/go-github/github"
 	"github.com/joho/godotenv"
 	"golang.org/x/oauth2"
@@ -13,12 +14,16 @@ import (
 	"time"
 )
 
-const location = "Asia/Tokyo"
+const (
+	LOCATION = "Asia/Tokyo"
+	CHANNEL  = "dev"
+	USERNAME = "GoBot"
+)
 
 func init() {
-	loc, err := time.LoadLocation(location)
+	loc, err := time.LoadLocation(LOCATION)
 	if err != nil {
-		loc = time.FixedZone(location, 9*60*60)
+		loc = time.FixedZone(LOCATION, 9*60*60)
 	}
 	time.Local = loc
 }
@@ -35,6 +40,7 @@ func main() {
 	fmt.Println("run environment is " + os.Getenv("ENV"))
 	numOfActivity := getGithubUserInfo()
 	tweetCommit(numOfActivity)
+	postSlack(numOfActivity)
 }
 
 // 当日のアクティビティを取得する（privateのコミット、アクティビティも含む）
@@ -97,7 +103,43 @@ func tweetCommit(numOfActivity int) {
 	accessTokenSecret := os.Getenv("TWITTER_ACCESS_TOKEN_SECRET")
 	api := anaconda.NewTwitterApiWithCredentials(accessToken, accessTokenSecret, apiKey, apiSecret)
 
-	tweet, _ := api.PostTweet("tweet by Go!", url.Values{})
+	tweet, err := api.PostTweet("tweet by Go! local time is "+time.Now().String(), url.Values{})
+	if err != nil {
+		fmt.Println("[ERROR] Slack post fail")
+		os.Exit(1)
+	} else {
+		fmt.Println("[INFO] tweet success!  post ID:" + tweet.IdStr)
+	}
+}
 
-	fmt.Println("tweet success! " + tweet.IdStr)
+// アクティビティ数をSlackに投稿
+func postSlack(numOfActivity int) {
+	webHookURL := os.Getenv("SLACK_WEB_HOOK_URL")
+	field1 := slack.Field{Title: "Message", Value: "テスト送信"}
+	field2 := slack.Field{Title: "AnythingKey", Value: "AnythingValue"}
+
+	attachment := slack.Attachment{}
+	attachment.AddField(field1).AddField(field2)
+	color := "good"
+	attachment.Color = &color
+	payload := slack.Payload{
+		Parse:       "",
+		Username:    "",
+		IconUrl:     "",
+		IconEmoji:   "",
+		Channel:     "",
+		Text:        "テキストのテスト",
+		LinkNames:   "",
+		Attachments: []slack.Attachment{attachment},
+		UnfurlLinks: false,
+		UnfurlMedia: false,
+		Markdown:    false,
+	}
+	err := slack.Send(webHookURL, "", payload)
+	if err != nil {
+		fmt.Println("[ERROR] Slack post fail")
+		os.Exit(1)
+	} else {
+		fmt.Println("[INFO] slack post success!")
+	}
 }
