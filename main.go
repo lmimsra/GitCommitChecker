@@ -16,7 +16,6 @@ import (
 
 const (
 	LOCATION = "Asia/Tokyo"
-	CHANNEL  = "dev"
 	USERNAME = "GoBot"
 )
 
@@ -39,6 +38,8 @@ func main() {
 	fmt.Println("process start")
 	fmt.Println("run environment is " + os.Getenv("ENV"))
 	numOfActivity := getGithubUserInfo()
+
+	fmt.Println("num of activity" + strconv.Itoa(numOfActivity))
 	tweetCommit(numOfActivity)
 	postSlack(numOfActivity)
 }
@@ -55,18 +56,21 @@ func getGithubUserInfo() int {
 		PerPage: 0,
 	})
 
-	resCommits, _, _ := client.Repositories.ListCommits(ctx, "lmimsra", "privante", &github.CommitsListOptions{
-		Author: "lmimsra",
-		ListOptions: github.ListOptions{
-			Page:    0,
-			PerPage: 0,
-		},
-	})
+	//resCommits, _, _ := client.Repositories.ListCommits(ctx, "lmimsra", "privante", &github.CommitsListOptions{
+	//	Author: "lmimsra",
+	//	ListOptions: github.ListOptions{
+	//		Page:    0,
+	//		PerPage: 0,
+	//	},
+	//})
+
+	// 実行日の0時0分0秒を作成
 	now := time.Now()
 	unixTime := now.Unix()
 	_, offset := now.Zone()
 	today := time.Unix((unixTime/86400)*86400-int64(offset), 0)
 	fmt.Println("toDay is " + today.String())
+
 	var todayActivity []*github.Event
 	if err == nil {
 		for i := range res {
@@ -87,10 +91,10 @@ func getGithubUserInfo() int {
 		fmt.Println("repoName: " + todayActivity[i].Repo.GetName() + "Create: " + res[i].CreatedAt.Local().String())
 	}
 
-	println("commits")
-	for i := range resCommits {
-		fmt.Println("name is " + resCommits[i].Author.GetName() + " message is " + resCommits[i].Commit.GetMessage())
-	}
+	//println("commits")
+	//for i := range resCommits {
+	//	fmt.Println("name is " + resCommits[i].Author.GetName() + " message is " + resCommits[i].Commit.GetMessage())
+	//}
 
 	return len(todayActivity)
 }
