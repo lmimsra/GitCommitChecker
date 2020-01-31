@@ -53,3 +53,4 @@ gen
 # vendor/
 
 .env
+git-commit-checker
