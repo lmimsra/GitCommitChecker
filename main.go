@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/ashwanthkumar/slack-go-webhook"
+	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/google/go-github/github"
 	"github.com/joho/godotenv"
 	"golang.org/x/oauth2"
@@ -28,6 +29,10 @@ func init() {
 }
 
 func main() {
+	lambda.Start(handle)
+}
+
+func handle() (string, error) {
 	// envの読み込み
 	err := godotenv.Load("./.env")
 	if err != nil {
@@ -44,6 +49,7 @@ func main() {
 	postTwitter(postMessage)
 	postSlack(postMessage)
 	fmt.Println("[INFO] finish commit check")
+	return "process complete!", nil
 }
 
 // 当日のアクティビティを取得する（privateのコミット、アクティビティも含む）

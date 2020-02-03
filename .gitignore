@@ -53,3 +53,5 @@ gen
 # vendor/
 
 .env
+git-commit-checker
+deploy.zip
